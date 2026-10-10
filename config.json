@@ -1,0 +1,30 @@
+{
+  "shopName": "Barbearia Estilo",
+  "address": "Rua Exemplo, 123 - Centro",
+  "phone": "(35) 99999-9999",
+  "timezone": "America/Sao_Paulo",
+  "slotMinutes": 30,
+  "daysAhead": 14,
+  "minLeadMinutes": 30,
+  "cancelMinHours": 2,
+  "maxActiveAppointments": 3,
+  "hours": {
+    "0": null,
+    "1": null,
+    "2": { "open": "09:00", "close": "19:00", "breaks": [["12:00", "13:00"]] },
+    "3": { "open": "09:00", "close": "19:00", "breaks": [["12:00", "13:00"]] },
+    "4": { "open": "09:00", "close": "19:00", "breaks": [["12:00", "13:00"]] },
+    "5": { "open": "09:00", "close": "19:00", "breaks": [["12:00", "13:00"]] },
+    "6": { "open": "08:00", "close": "16:00", "breaks": [] }
+  },
+  "services": [
+    { "id": "corte", "name": "Corte", "durationMin": 30, "priceCents": 4000 },
+    { "id": "barba", "name": "Barba", "durationMin": 30, "priceCents": 3000 },
+    { "id": "corte-barba", "name": "Corte + Barba", "durationMin": 60, "priceCents": 6500 },
+    { "id": "sobrancelha", "name": "Sobrancelha", "durationMin": 30, "priceCents": 1500 }
+  ],
+  "barbers": [
+    { "id": "joao", "name": "João" },
+    { "id": "pedro", "name": "Pedro" }
+  ]
+}

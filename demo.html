@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#075e54">
+<title>__SHOP_NAME__ – Demonstração</title>
+<style>
+  :root {
+    --header: #075e54; --header-text: #fff; --bg: #efeae2;
+    --in: #fff; --out: #d9fdd3; --text: #111b21; --muted: #667781;
+    --link: #027eb5; --sheet: #fff; --line: #e9edef; --input-bg: #f0f2f5; --send: #00a884;
+    --chip: #fff3c7; --chip-text: #54451b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --header: #1f2c34; --bg: #0b141a; --in: #202c33; --out: #005c4b;
+      --text: #e9edef; --muted: #8696a0; --link: #53bdeb; --sheet: #1f2c34;
+      --line: #2a3942; --input-bg: #1f2c34; --chip: #1f2c34; --chip-text: #ffd279;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    color: var(--text); background: var(--bg);
+    display: flex; flex-direction: column; height: 100dvh; overflow: hidden;
+  }
+  header {
+    background: var(--header); color: var(--header-text);
+    padding: calc(env(safe-area-inset-top) + 10px) 12px 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.18); display: grid; place-items: center; font-size: 22px; }
+  .title { flex: 1; min-width: 0; }
+  .title b { display: block; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .title span { font-size: 12px; opacity: .8; }
+  header button { background: none; border: 0; color: inherit; font-size: 22px; padding: 6px 8px; cursor: pointer; }
+
+  #chat {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 10px 10px 14px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .chip {
+    align-self: center; max-width: 92%; text-align: center; font-size: 12.5px; line-height: 1.35;
+    background: var(--chip); color: var(--chip-text); padding: 6px 10px; border-radius: 8px; margin-bottom: 4px;
+  }
+  .row { display: flex; }
+  .row.out { justify-content: flex-end; }
+  .col { max-width: 84%; display: flex; flex-direction: column; gap: 3px; }
+  .bubble {
+    padding: 7px 9px 4px; border-radius: 9px; font-size: 16px; line-height: 1.35;
+    box-shadow: 0 1px .5px rgba(0,0,0,.13); word-wrap: break-word; overflow-wrap: anywhere;
+  }
+  .in .bubble, .bubble.in { background: var(--in); border-top-left-radius: 2px; }
+  .out .bubble { background: var(--out); border-top-right-radius: 2px; }
+  .text { white-space: pre-wrap; }
+  .time { display: block; text-align: right; font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .abtn {
+    appearance: none; border: 0; width: 100%; background: var(--in); color: var(--link);
+    font: inherit; font-size: 16px; font-weight: 500; text-align: center;
+    padding: 11px 12px; border-radius: 9px; box-shadow: 0 1px .5px rgba(0,0,0,.13); cursor: pointer;
+  }
+  .abtn:active { filter: brightness(.94); }
+
+  .typing .bubble { color: var(--muted); font-size: 14px; padding-bottom: 7px; }
+
+  form {
+    display: flex; gap: 8px; align-items: center; background: var(--input-bg);
+    padding: 8px 10px calc(env(safe-area-inset-bottom) + 8px);
+  }
+  input[type=text] {
+    flex: 1; min-width: 0; font-size: 16px; /* 16px evita o zoom automático do iPhone */
+    border: 0; border-radius: 22px; padding: 11px 16px; background: var(--in); color: var(--text); outline: none;
+  }
+  form button {
+    width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--send); color: #fff;
+    font-size: 20px; cursor: pointer; display: grid; place-items: center;
+  }
+
+  #backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; z-index: 5; }
+  #sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--sheet);
+    border-radius: 16px 16px 0 0; max-height: 72dvh; display: none; flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  #sheet.open, #backdrop.open { display: flex; }
+  #backdrop.open { display: block; }
+  .sheet-head { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--line); font-weight: 600; }
+  .sheet-head span { flex: 1; }
+  .sheet-head button { background: none; border: 0; color: var(--muted); font-size: 26px; line-height: 1; padding: 0 4px; cursor: pointer; }
+  #rows { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .opt {
+    display: block; width: 100%; text-align: left; background: none; border: 0; color: var(--text);
+    padding: 13px 16px; border-bottom: 1px solid var(--line); font: inherit; cursor: pointer;
+  }
+  .opt:active { background: var(--input-bg); }
+  .opt b { display: block; font-weight: 500; font-size: 16px; }
+  .opt small { display: block; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="avatar">💈</div>
+  <div class="title"><b>__SHOP_NAME__</b><span>conta comercial • demonstração</span></div>
+  <button id="reset" type="button" aria-label="Recomeçar conversa" title="Recomeçar">⟳</button>
+</header>
+
+<main id="chat" aria-live="polite">
+  <div class="chip">🔒 Demonstração: nenhuma mensagem é enviada ao WhatsApp. Os agendamentos feitos aqui existem só neste teste.</div>
+</main>
+
+<form id="form" autocomplete="off">
+  <input id="input" type="text" placeholder="Mensagem" enterkeyhint="send" autocapitalize="sentences">
+  <button type="submit" aria-label="Enviar">➤</button>
+</form>
+
+<div id="backdrop"></div>
+<div id="sheet" role="dialog" aria-modal="true">
+  <div class="sheet-head"><span id="sheet-title"></span><button id="sheet-close" type="button" aria-label="Fechar">×</button></div>
+  <div id="rows"></div>
+</div>
+
+<script>
+(function () {
+  var sid = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
+  var chat = document.getElementById('chat');
+  var form = document.getElementById('form');
+  var input = document.getElementById('input');
+  var sheet = document.getElementById('sheet');
+  var backdrop = document.getElementById('backdrop');
+  var rowsEl = document.getElementById('rows');
+  var sheetTitle = document.getElementById('sheet-title');
+  var queue = Promise.resolve();
+  var typingEl = null;
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function clock() {
+    return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function toBottom() { chat.scrollTop = chat.scrollHeight; }
+
+  // Converte *negrito* do WhatsApp sem usar innerHTML
+  function rich(target, text) {
+    text.split(/(\*[^*\n]+\*)/g).forEach(function (part) {
+      if (/^\*[^*\n]+\*$/.test(part)) target.appendChild(el('strong', null, part.slice(1, -1)));
+      else if (part) target.appendChild(document.createTextNode(part));
+    });
+  }
+
+  function bubble(cls, body) {
+    var b = el('div', 'bubble ' + cls);
+    var t = el('div', 'text');
+    rich(t, body);
+    b.appendChild(t);
+    b.appendChild(el('span', 'time', clock()));
+    return b;
+  }
+
+  function addUser(text) {
+    var row = el('div', 'row out');
+    var col = el('div', 'col');
+    col.appendChild(bubble('out', text));
+    row.appendChild(col);
+    chat.appendChild(row);
+    toBottom();
+  }
+
+  function addBot(m) {
+    var row = el('div', 'row in');
+    var col = el('div', 'col');
+    col.appendChild(bubble('in', m.body));
+
+    if (m.kind === 'buttons') {
+      m.buttons.forEach(function (b) {
+        var btn = el('button', 'abtn', b.title);
+        btn.type = 'button';
+        btn.onclick = function () { pick(b.id, b.title); };
+        col.appendChild(btn);
+      });
+    } else if (m.kind === 'list') {
+      var open = el('button', 'abtn', '☰  ' + m.label);
+      open.type = 'button';
+      open.onclick = function () { openSheet(m); };
+      col.appendChild(open);
+    }
+    row.appendChild(col);
+    chat.appendChild(row);
+    toBottom();
+  }
+
+  function showTyping() {
+    typingEl = el('div', 'row in typing');
+    var col = el('div', 'col');
+    var b = el('div', 'bubble in', 'digitando…');
+    col.appendChild(b);
+    typingEl.appendChild(col);
+    chat.appendChild(typingEl);
+    toBottom();
+  }
+  function hideTyping() { if (typingEl) { typingEl.remove(); typingEl = null; } }
+
+  function openSheet(m) {
+    sheetTitle.textContent = m.label;
+    rowsEl.textContent = '';
+    m.rows.forEach(function (r) {
+      var o = el('button', 'opt');
+      o.type = 'button';
+      o.appendChild(el('b', null, r.title));
+      if (r.description) o.appendChild(el('small', null, r.description));
+      o.onclick = function () { closeSheet(); pick(r.id, r.title); };
+      rowsEl.appendChild(o);
+    });
+    sheet.classList.add('open');
+    backdrop.classList.add('open');
+  }
+  function closeSheet() {
+    sheet.classList.remove('open');
+    backdrop.classList.remove('open');
+  }
+  backdrop.onclick = closeSheet;
+  document.getElementById('sheet-close').onclick = closeSheet;
+
+  function send(payload) {
+    queue = queue.then(function () {
+      showTyping();
+      return fetch('/demo/api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ sid: sid }, payload))
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var msgs = (data && data.messages) || [];
+          return msgs.reduce(function (p, m, i) {
+            return p.then(function () { return wait(i === 0 ? 450 : 700); })
+                    .then(function () { if (i === 0) hideTyping(); addBot(m); });
+          }, Promise.resolve()).then(hideTyping);
+        })
+        .catch(function () {
+          hideTyping();
+          var chip = el('div', 'chip', 'Sem conexão com o servidor. Tente novamente.');
+          chat.appendChild(chip);
+          toBottom();
+        });
+    });
+    return queue;
+  }
+
+  function pick(id, title) {
+    addUser(title);
+    send({ replyId: id, title: title });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    addUser(text);
+    send({ text: text });
+  });
+
+  document.getElementById('reset').onclick = function () { location.reload(); };
+
+  // Mantém o campo visível quando o teclado do iPhone abre
+  if (window.visualViewport) {
+    var vv = window.visualViewport;
+    vv.addEventListener('resize', function () {
+      document.body.style.height = vv.height + 'px';
+      window.scrollTo(0, 0);
+      toBottom();
+    });
+  }
+
+  // A conversa começa como no WhatsApp: o cliente manda "oi"
+  addUser('oi');
+  send({ text: 'oi' });
+})();
+</script>
+</body>
+</html>
