@@ -1,7 +1,11 @@
 {
   "shopName": "Barbearia Estilo",
+  "tagline": "Agende seu horário em poucos toques",
   "address": "Rua Exemplo, 123 - Centro",
   "phone": "(35) 99999-9999",
+  "whatsappNumber": "",
+  "logo": "",
+  "theme": { "brand": "#14284b", "accent": "#c8102e" },
   "timezone": "America/Sao_Paulo",
   "slotMinutes": 30,
   "daysAhead": 14,
@@ -17,11 +21,28 @@
     "5": { "open": "09:00", "close": "19:00", "breaks": [["12:00", "13:00"]] },
     "6": { "open": "08:00", "close": "16:00", "breaks": [] }
   },
+  "reminders": {
+    "enabled": true,
+    "confirmation": true,
+    "dayBefore": { "at": "09:00" },
+    "sameDay": { "at": "08:00" }
+  },
+  "templates": {
+    "language": "pt_BR",
+    "confirmacao": "confirmacao_agendamento",
+    "vespera": "lembrete_vespera",
+    "hoje": "lembrete_hoje"
+  },
   "services": [
-    { "id": "corte", "name": "Corte", "durationMin": 30, "priceCents": 4000 },
-    { "id": "barba", "name": "Barba", "durationMin": 30, "priceCents": 3000 },
-    { "id": "corte-barba", "name": "Corte + Barba", "durationMin": 60, "priceCents": 6500 },
-    { "id": "sobrancelha", "name": "Sobrancelha", "durationMin": 30, "priceCents": 1500 }
+    { "id": "corte", "name": "Corte", "description": "Corte na máquina ou na tesoura, com acabamento.", "durationMin": 30, "priceCents": 4000 },
+    { "id": "barba", "name": "Barba", "description": "Barba modelada com toalha quente.", "durationMin": 30, "priceCents": 3000 },
+    { "id": "corte-barba", "name": "Corte + Barba", "description": "O combo completo.", "durationMin": 60, "priceCents": 6500 },
+    { "id": "sobrancelha", "name": "Sobrancelha", "description": "Limpeza e design na navalha.", "durationMin": 30, "priceCents": 1500 }
+  ],
+  "extras": [
+    { "id": "x-sobrancelha", "name": "Sobrancelha", "durationMin": 15, "priceCents": 1500 },
+    { "id": "x-limpeza", "name": "Limpeza de pele", "durationMin": 20, "priceCents": 2500 },
+    { "id": "x-hidratacao", "name": "Hidratação", "durationMin": 15, "priceCents": 2000 }
   ],
   "barbers": [
     { "id": "joao", "name": "João" },

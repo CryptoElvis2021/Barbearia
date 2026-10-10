@@ -1,19 +1,39 @@
 // Cliente da WhatsApp Cloud API (envio) e leitura do webhook (recebimento).
 
 const trunc = (s, n) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+// Parâmetros de modelo não aceitam quebras de linha, tabs nem muitos espaços seguidos
+const param = (s) => String(s).replace(/[\r\n\t]+/g, ' ').replace(/ {2,}/g, ' ').trim().slice(0, 1000) || '-';
 
 export function createWhatsApp({ token, phoneNumberId, apiVersion = 'v21.0' }) {
   async function post(payload) {
-    const res = await fetch(`https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messaging_product: 'whatsapp', ...payload }),
-    });
-    if (!res.ok) console.error('Erro ao enviar mensagem:', res.status, await res.text());
+    try {
+      const res = await fetch(`https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messaging_product: 'whatsapp', ...payload }),
+      });
+      if (!res.ok) console.error('Erro ao enviar mensagem:', res.status, await res.text());
+      return res.ok;
+    } catch (err) {
+      console.error('Falha de rede ao enviar mensagem:', err.message);
+      return false;
+    }
   }
 
   return {
     sendText: (to, body) => post({ to, type: 'text', text: { body } }),
+
+    // Mensagem iniciada pela barbearia (fora da janela de 24h): exige modelo aprovado pela Meta
+    sendTemplate: (to, name, language, params) =>
+      post({
+        to,
+        type: 'template',
+        template: {
+          name,
+          language: { code: language },
+          components: [{ type: 'body', parameters: params.map((p) => ({ type: 'text', text: param(p) })) }],
+        },
+      }),
 
     // Até 3 botões; título de até 20 caracteres
     sendButtons: (to, body, buttons) =>

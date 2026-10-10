@@ -1,5 +1,7 @@
 import { availableDates, book, freeSlots, hoursFor, upcomingFor } from './availability.js';
 import { getCustomer, getSession, saveCustomer, saveSession } from './db.js';
+import { canonPhone } from './phone.js';
+import { markPastReminders } from './reminders.js';
 import { brl, DIAS, fmtDate, minutesUntil, toHHMM } from './time.js';
 
 const PAGE_SIZE = 8;
@@ -186,6 +188,8 @@ export function createBot({ db, config, sender, clock }) {
       return askTime(to, ctx, now);
     }
 
+    markPastReminders(db, config, { id: result.id, date, start_min: start }, now);
+
     await say(
       to,
       [
@@ -206,7 +210,7 @@ export function createBot({ db, config, sender, clock }) {
   async function showAppointment(to, ctx, id) {
     const appt = db
       .prepare("SELECT * FROM appointments WHERE id = ? AND phone = ? AND status = 'confirmed'")
-      .get(id, to);
+      .get(id, canonPhone(to));
     if (!appt) {
       await say(to, 'Não encontrei esse agendamento (talvez já tenha sido cancelado).');
       return showMenu(to, ctx);
@@ -229,7 +233,7 @@ export function createBot({ db, config, sender, clock }) {
   async function askCancel(to, ctx, id, now) {
     const appt = db
       .prepare("SELECT * FROM appointments WHERE id = ? AND phone = ? AND status = 'confirmed'")
-      .get(id, to);
+      .get(id, canonPhone(to));
     if (!appt) {
       await say(to, 'Não encontrei esse agendamento (talvez já tenha sido cancelado).');
       return showMenu(to, ctx);
@@ -254,7 +258,7 @@ export function createBot({ db, config, sender, clock }) {
   async function doCancel(to, ctx, id, now) {
     const appt = db
       .prepare("SELECT * FROM appointments WHERE id = ? AND phone = ? AND status = 'confirmed'")
-      .get(id, to);
+      .get(id, canonPhone(to));
     if (!appt) {
       await say(to, 'Esse agendamento já não está ativo.');
       return showMenu(to, ctx);

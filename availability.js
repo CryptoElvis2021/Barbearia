@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+import { canonPhone } from './phone.js';
 import { addDays, dayOfWeek, toMin } from './time.js';
 
 export const hoursFor = (config, date) => config.hours[String(dayOfWeek(date))] ?? null;
@@ -49,8 +51,9 @@ export function availableDates(db, config, barberId, durationMin, now, limit = 9
 
 // Reserva com checagem de conflito dentro de uma transação exclusiva,
 // para que dois clientes não consigam pegar o mesmo horário.
-export function book(db, { phone, customerName, barberId, service, date, start }) {
+export function book(db, { phone, customerName, barberId, service, date, start, source = 'whatsapp' }) {
   const end = start + service.durationMin;
+  const token = crypto.randomBytes(16).toString('hex');
   db.exec('BEGIN IMMEDIATE');
   try {
     const clash = db
@@ -65,12 +68,24 @@ export function book(db, { phone, customerName, barberId, service, date, start }
     const r = db
       .prepare(
         `INSERT INTO appointments
-         (phone, customer_name, barber_id, service_id, service_name, price_cents, date, start_min, end_min)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (phone, customer_name, barber_id, service_id, service_name, price_cents, date, start_min, end_min, cancel_token, source)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(phone, customerName, barberId, service.id, service.name, service.priceCents, date, start, end);
+      .run(
+        canonPhone(phone),
+        customerName,
+        barberId,
+        service.id,
+        service.name,
+        service.priceCents,
+        date,
+        start,
+        end,
+        token,
+        source,
+      );
     db.exec('COMMIT');
-    return { ok: true, id: Number(r.lastInsertRowid) };
+    return { ok: true, id: Number(r.lastInsertRowid), token };
   } catch (err) {
     db.exec('ROLLBACK');
     throw err;
@@ -84,5 +99,5 @@ export function upcomingFor(db, phone, now) {
        WHERE phone = ? AND status = 'confirmed' AND (date > ? OR (date = ? AND start_min >= ?))
        ORDER BY date, start_min LIMIT 10`,
     )
-    .all(phone, now.date, now.date, now.minutes);
+    .all(canonPhone(phone), now.date, now.date, now.minutes);
 }
